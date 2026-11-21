@@ -15,8 +15,9 @@
     smooth: ["smooth", "singular", "null"], parity: ["1", "-1"], omega: ["1", "-1"],
     fixed: ["listed", "empty", "unavailable"], finite: ["0", "1"]
   };
-  const numeric = ["h21", "h11minus", "h21minus", "euler", "o3"];
-  const named = [...Object.keys(categorical), ...numeric, "d3"];
+  const numeric = ["h21", "h11minus", "h21minus"];
+  const rangeFields = ["euler", "o3", "d3"];
+  const named = [...Object.keys(categorical), ...numeric, ...rangeFields];
   let request = 0, exportUrl;
 
   function node(tag, text, className) {
@@ -38,21 +39,39 @@
     return Number(numerator / denominator);
   }
 
+  function bounds(key, value) {
+    function parse(text) {
+      if (key === "d3") return quadruple(text);
+      const n = Number(text);
+      if (!/^[+-]?\d+$/.test(text) || !Number.isSafeInteger(n) || (key === "o3" && n < 0)) {
+        throw Error(key === "o3" ? "O3 point-count bounds must be nonnegative integers." : "Fixed-set Euler bounds must be integers.");
+      }
+      return n;
+    }
+    const parts = value.split("..").map(end => end.trim());
+    if (parts.length === 1) { const n = parse(parts[0]); return [n, n]; }
+    if (parts.length !== 2 || (!parts[0] && !parts[1])) throw Error("Enter one or two range bounds, such as 12.. or 3..5.");
+    const lo = parts[0] ? parse(parts[0]) : -Infinity;
+    const hi = parts[1] ? parse(parts[1]) : Infinity;
+    if (lo > hi) throw Error("The lower bound must be less than or equal to the upper bound.");
+    return [lo, hi];
+  }
+
   function readQuery(params) {
-    const filters = {};
+    const filters = {bounds:{}};
     for (const key of named) {
       const value = params.get(key);
       if (!value) continue;
       if (categorical[key] && !categorical[key].includes(value)) throw Error("Unknown selection for " + key + ".");
-      if (numeric.includes(key) && (!/^-?\d+$/.test(value) || !Number.isSafeInteger(Number(value)) || (key !== "euler" && Number(value) < 0))) {
+      if (numeric.includes(key) && (!/^\d+$/.test(value) || !Number.isSafeInteger(Number(value)))) {
         throw Error("The " + key + " filter requires an integer in the field’s range.");
       }
+      if (rangeFields.includes(key)) filters.bounds[key] = bounds(key, value);
       filters[key] = value;
     }
     const names = (params.get("planes") || "").split(",").filter(Boolean);
     if (names.some(p => !Object.hasOwn(planeBits, p))) throw Error("Choose O3, O5, O7 or O9 for the O-plane filter.");
     filters.planes = names;
-    if (filters.d3) filters.fourD3 = quadruple(filters.d3);
     const page = Number(params.get("page") || 1);
     if (!Number.isSafeInteger(page) || page < 1) throw Error("The page number must be a positive integer.");
     return {filters, page};
@@ -127,7 +146,7 @@
   function selectGroups(ranks, f) {
     const checks = [];
     for (const [key, column] of Object.entries({kind:"kind", smooth:"smooth", fixed:"fixed_state", parity:"poly_parity",
-      omega:"omega", finite:"finite", euler:"euler", o3:"o3", h21:"h21", h11minus:"h11_minus", h21minus:"h21_minus"})) {
+      omega:"omega", finite:"finite", h21:"h21", h11minus:"h11_minus", h21minus:"h21_minus"})) {
       if (f[key] === undefined) continue;
       const value = ["kind","fixed","smooth"].includes(key) ? (f[key] === "null" ? null : f[key]) : Number(f[key]);
       checks.push([column, value]);
@@ -136,9 +155,11 @@
     let count = 0;
     for (const data of ranks) {
       const c = data.col, fields = checks.map(([key, value]) => [c[key], value]);
+      const limits = Object.entries(f.bounds).map(([key, [lo, hi]]) => [c[key === "d3" ? "euler" : key], lo, hi]);
       for (const row of data.groups) {
         if ((row[c.planes] & mask) !== mask || fields.some(([col, value]) => row[col] !== value)) continue;
-        if (f.d3 !== undefined && (!localD3Eligible(row, c) || row[c.euler] !== f.fourD3)) continue;
+        if (f.d3 !== undefined && !localD3Eligible(row, c)) continue;
+        if (limits.some(([col, lo, hi]) => !Number.isSafeInteger(row[col]) || row[col] < lo || row[col] > hi)) continue;
         matches.push({data, row, first:count});
         count += row[c.count];
       }

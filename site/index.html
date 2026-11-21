@@ -8,7 +8,7 @@
   <link href="./field-search.css" rel="stylesheet">
   <script defer src="./zip-catalogue.js"></script>
   <script defer src="./catalogue.js"></script>
-  <script defer src="./field-search.js"></script>
+  <script defer src="./field-search.js?v=2"></script>
 </head>
 <body>
   <header><div class="wrap mast"><a class="mark" href="./">CY / Orientifolds</a><a class="guide" href="./guide.html">Field guide</a></div></header>
@@ -43,11 +43,11 @@
             <label>Holomorphic form parity Ω<select name="omega"><option value="">Either sign</option><option value="1">+1</option><option value="-1">−1</option></select></label>
             <label>Finite Cox factor<select name="finite"><option value="">Any</option><option value="1">Nontrivial</option><option value="0">Trivial</option></select></label>
             <label>Fixed-locus record<select name="fixed"><option value="">Any</option><option value="listed">Loci listed</option><option value="empty">Certified empty fixed set</option><option value="unavailable">Unavailable (null)</option></select></label>
-            <label>Total O3 points<input type="number" step="1" min="0" name="o3" placeholder="Any"></label>
-            <label>Whole fixed-set Euler χ<input type="number" step="1" name="euler" placeholder="Any"></label>
-            <label>D3 tadpole (local D7 stacks)<input type="text" name="d3" placeholder="e.g. 12 or 49/4"></label>
+            <label>Total O3 points<input type="text" name="o3" placeholder="e.g. 3..5"></label>
+            <label>Whole fixed-set Euler χ<input type="text" name="euler" placeholder="e.g. 48"></label>
+            <label>D3 tadpole (local D7 stacks)<input type="text" name="d3" placeholder="e.g. 12.. or 49/4"></label>
           </div>
-          <p class="field-help">Numeric filters match exact values. <a href="./guide.html#properties">Field definitions</a></p>
+          <p class="field-help">O3 count, fixed-set χ and D3 tadpole accept a value or an inclusive range. Use <code>12..</code> for at least 12, <code>..8</code> for at most 8, or <code>8..12</code> for both bounds. <a href="./guide.html#properties">Field definitions</a></p>
         </details>
         <div class="search-buttons"><button type="submit">Search eigenfamilies</button><button type="reset" class="secondary">Reset</button></div>
       </form>

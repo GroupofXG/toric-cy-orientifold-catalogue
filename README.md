@@ -26,7 +26,7 @@ You can start with a physics question even if you do not know a catalogue ID. Se
 
 * [Families with both O3 and O7 at $h^{1,1}=2$](https://groupofxg.github.io/toric-cy-orientifold-catalogue/?search=1&rank=2&planes=O3,O7) (152 eigenfamilies).
 * [Smooth reflection families with O7 and whole fixed-set Euler characteristic 48 at $h^{1,1}=3$](https://groupofxg.github.io/toric-cy-orientifold-catalogue/?search=1&rank=3&kind=REF&planes=O7&smooth=smooth&euler=48) (231 eigenfamilies).
-* [Local-D7 configurations with $L_{\mathrm{D3}}=12$ at $h^{1,1}=3$](https://groupofxg.github.io/toric-cy-orientifold-catalogue/?search=1&rank=3&d3=12) (257 eigenfamilies). This search uses equation (31) of the paper for smooth, Ω-odd families with a nonempty fixed set classified entirely as O3 or O7.
+* [Local-D7 configurations with $L_{\mathrm{D3}}\geq 12$ at $h^{1,1}=3$](https://groupofxg.github.io/toric-cy-orientifold-catalogue/?search=1&rank=3&d3=12..) (724 eigenfamilies). This search uses equation (31) of the paper for smooth, Ω-odd families with a nonempty fixed set classified entirely as O3 or O7. The O3 point count, fixed-set Euler characteristic and D3 tadpole accept exact values and inclusive ranges, such as `3..5` or `12..`.
 
 Paste a catalogue ID into the search page, or follow a record link directly. For example, `P2_1_T0_I1_Pplus` is the positive polynomial parity of divisor exchange 1 on triangulation 0 of polytope 1 at $h^{1,1}=2$. Its fixed locus is an O5 curve of Euler characteristic $-18$. The page also lets you switch to the other parity or export the selected triangulation and its associated records as JSON. [Open this example](https://groupofxg.github.io/toric-cy-orientifold-catalogue/?h=2&p=1&t=P2_1_T0&i=P2_1_I1&s=Pplus)
 
