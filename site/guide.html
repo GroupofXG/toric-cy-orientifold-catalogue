@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="./catalogue.css"><title>Reading the catalogue</title>
+</head><body><header><div class="wrap mast"><a class="mark" href="./">CY / Orientifolds</a><span>Reader's guide</span></div></header>
+<main class="wrap">
+<h1>Reading the catalogue</h1>
+<p>This edition contains the favourable polytopes at h<sup>1,1</sup> = 1–6, their FRSTs and the eigenfamilies of compatible divisor exchanges and coordinate reflections. The two polynomial characters have separate records. The field conventions follow <a href="https://arxiv.org/html/2611.22785v1#A1">Appendix A of Cao and Gao</a>.</p>
+<h2>Follow a published ID</h2>
+<p><a href="./?h=2&amp;p=1&amp;t=P2_1_T0&amp;i=P2_1_I1&amp;s=Pplus">P2_1_T0_I1_Pplus</a> is the positive polynomial character of exchange 1 on triangulation 0 of polytope 1 at h<sup>1,1</sup> = 2. Its fixed locus is an O5 curve with Euler characteristic −18. For reflections, R followed by an integer identifies a nonzero lattice class realised by coordinate signs. The K series preserves the original Kreuzer–Skarke block indices at rank one. TX identifies a triangulation that lacked a historical number.</p>
+<h2>The four tables</h2>
+<table><thead><tr><th>File</th><th>Row and joins</th></tr></thead><tbody>
+<tr><td>polytopes.jsonl</td><td>One polytope. Its ray order fixes the zero-based Cox coordinate indices. The row includes the weights and finite Cox actions.</td></tr>
+<tr><td>triangulations.jsonl</td><td>One FRST. Use polytope_id for the ray order. The row gives the SR ideal, divisor data, triple and ambient quadruple intersections.</td></tr>
+<tr><td>involutions.jsonl</td><td>One action on a polytope, with its exchanged coordinates or reflection class. The eigenfamily table records the triangulations on which it occurs.</td></tr>
+<tr><td>orientifolds.jsonl</td><td>One triangulation, involution and polynomial character. Join triangulation_id and involution_id to their respective tables.</td></tr>
+</tbody></table>
+<p>Each bulk download includes all four UTF-8 JSON Lines tables for one rank, a field guide and definitions/coefficients.jsonl. That dictionary is keyed by orientifold_id. It defines generic coefficients and algebraic roots that appear in the fixed-locus equations. The browser opens it alongside the relevant family. Rational numbers such as “1/3” are exact.</p>
+<h2>Fixed sets and smoothness</h2>
+<p>The fixed set lies on a general hypersurface in the specified eigenspace and triangulation. For each locus impose all entries in zero_coordinates and equations together. The local labels in equations refer to that family's polynomials. A group of isolated points carries point_count, a positive-dimensional component carries euler, and euler_fixed describes the whole fixed set. An empty list certifies an empty fixed set. A null fixed_loci value can represent a missing hypersurface or an incomplete decomposition.</p>
+<p>polynomial_parity is the sign of the Cox polynomial for the chosen representative. omega_parity is the sign of the holomorphic three-form. A smoothness verdict concerns a general member. In this frozen edition 3,602 nonempty families have an unresolved smoothness verdict. Of these, 3,601 divisor-exchange families had coupled derivative conditions and one reflection reached the time budget. Their published rows retain null. Consult the source batch or rank download for the exact published JSON.</p>
+<h2>Using the data in a paper</h2>
+<p>Give the family ID and the edition dated 2026-11-20 so the record can be retrieved unambiguously. Cite Xu Cao and Xin Gao, <a href="https://arxiv.org/abs/2611.22785"><i>Toric Calabi–Yau orientifolds: constructions, fixed loci and O-plane charges</i></a>.</p>
+<p><a href="./">Return to the catalogue</a></p>
+</main></body></html>
