@@ -5,17 +5,55 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Calabi–Yau orientifold catalogue</title>
   <link href="./catalogue.css" rel="stylesheet">
+  <link href="./field-search.css" rel="stylesheet">
   <script defer src="./zip-catalogue.js"></script>
   <script defer src="./catalogue.js"></script>
+  <script defer src="./field-search.js"></script>
 </head>
 <body>
   <header><div class="wrap mast"><a class="mark" href="./">CY / Orientifolds</a><a class="guide" href="./guide.html">Field guide</a></div></header>
   <main class="wrap">
     <h1>Calabi–Yau orientifold catalogue</h1>
-    <p class="intro">Explore fixed loci on favourable toric hypersurfaces by polytope, triangulation and involution.</p>
+    <p class="intro">Find eigenfamilies on favourable toric hypersurfaces by their geometry and fixed loci.</p>
     <p class="edition" id="edition"></p>
-    <section aria-labelledby="coverage"><h2 id="coverage">Available data</h2>
-      <div class="scroll"><table><thead><tr><th scope="col">h<sup>1,1</sup></th><th scope="col">Polytopes</th><th scope="col">FRSTs</th><th scope="col">Involutions</th><th scope="col">Eigenfamilies</th></tr></thead><tbody id="counts"></tbody></table></div>
+    <nav class="page-links" aria-label="Catalogue sections"><a href="#field-search">Search by properties</a><a href="#lookup">Open a catalogue ID</a><a href="#coverage">Downloads</a></nav>
+    <section id="field-search" aria-labelledby="field-heading">
+      <h2 id="field-heading">Search by properties</h2>
+      <form id="family-search">
+        <div class="search-fields">
+          <label>Hodge number h<sup>1,1</sup><select name="rank" id="search-rank"><option value="">All ranks (1–6)</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></label>
+          <label>Involution<select name="kind"><option value="">Any involution</option><option value="NID">Divisor exchange (NID)</option><option value="REF">Coordinate reflection (REF)</option></select></label>
+          <label>Generic smoothness<select name="smooth"><option value="">Any verdict</option><option value="smooth">Smooth</option><option value="singular">Singular</option><option value="null">No verdict (null)</option></select></label>
+        </div>
+        <fieldset class="plane-fields"><legend>O-planes present</legend>
+          <div class="plane-options">
+            <label><input type="checkbox" name="plane" value="O3">O3</label>
+            <label><input type="checkbox" name="plane" value="O5">O5</label>
+            <label><input type="checkbox" name="plane" value="O7">O7</label>
+            <label><input type="checkbox" name="plane" value="O9">O9</label>
+          </div>
+          <p class="field-help">Select several to require all of them in the same eigenfamily.</p>
+        </fieldset>
+        <details id="advanced-search"><summary>More filters</summary>
+          <div class="search-fields advanced-fields">
+            <label>Hodge number h<sup>2,1</sup><input type="number" step="1" min="0" name="h21" placeholder="Any"></label>
+            <label>Odd Hodge h<sup>1,1</sup><sub>−</sub><input type="number" step="1" min="0" name="h11minus" placeholder="Any"></label>
+            <label>Odd Hodge h<sup>2,1</sup><sub>−</sub><input type="number" step="1" min="0" name="h21minus" placeholder="Any"></label>
+            <label>Polynomial parity γ<select name="parity"><option value="">Either sign</option><option value="1">+1</option><option value="-1">−1</option></select></label>
+            <label>Holomorphic form parity Ω<select name="omega"><option value="">Either sign</option><option value="1">+1</option><option value="-1">−1</option></select></label>
+            <label>Finite Cox factor<select name="finite"><option value="">Any</option><option value="1">Nontrivial</option><option value="0">Trivial</option></select></label>
+            <label>Fixed-locus record<select name="fixed"><option value="">Any</option><option value="listed">Loci listed</option><option value="empty">Certified empty fixed set</option><option value="unavailable">Unavailable (null)</option></select></label>
+            <label>Total O3 points<input type="number" step="1" min="0" name="o3" placeholder="Any"></label>
+            <label>Whole fixed-set Euler χ<input type="number" step="1" name="euler" placeholder="Any"></label>
+            <label>D3 tadpole (local D7 stacks)<input type="text" name="d3" placeholder="e.g. 12 or 49/4"></label>
+          </div>
+          <p class="field-help">Numeric filters match exact values. <a href="./guide.html#properties">Field definitions</a></p>
+        </details>
+        <div class="search-buttons"><button type="submit">Search eigenfamilies</button><button type="reset" class="secondary">Reset</button></div>
+      </form>
+      <p class="field-example">Example: <a href="?search=1&amp;rank=3&amp;kind=REF&amp;planes=O7&amp;smooth=smooth&amp;euler=48">smooth reflections with an O7 plane and fixed-set χ = 48 at h<sup>1,1</sup> = 3</a></p>
+      <p id="search-status" role="status" aria-live="polite"></p>
+      <div id="search-results"></div>
     </section>
     <section aria-labelledby="lookup"><h2 id="lookup">Find a record</h2>
       <form id="lookup-form">
@@ -27,6 +65,9 @@
     </section>
     <p id="status" role="status" aria-live="polite"></p>
     <article id="result" aria-label="Catalogue records"></article>
+    <section aria-labelledby="coverage"><h2 id="coverage">Coverage and downloads</h2>
+      <div class="scroll"><table><thead><tr><th scope="col">h<sup>1,1</sup></th><th scope="col">Polytopes</th><th scope="col">FRSTs</th><th scope="col">Involutions</th><th scope="col">Eigenfamilies</th></tr></thead><tbody id="counts"></tbody></table></div>
+    </section>
     <noscript>Enable JavaScript to browse records or download the JSON Lines tables from the release.</noscript>
   </main>
 </body>

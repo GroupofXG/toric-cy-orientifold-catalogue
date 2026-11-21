@@ -270,10 +270,10 @@
     });
     document.addEventListener("click", event => {
       const link = event.target.closest("a[href]");
-      if (!link || link.hasAttribute("download") || link.target || event.button !== 0 ||
+      if (!link || link.hasAttribute("download") || link.hasAttribute("data-search-record") || link.target || event.button !== 0 ||
           event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
       const url = new URL(link.href);
-      if (url.origin !== location.origin || url.pathname !== location.pathname || !url.search || url.hash) return;
+      if (url.origin !== location.origin || url.pathname !== location.pathname || !url.search || url.hash || url.searchParams.has("search")) return;
       event.preventDefault();
       history.pushState(null, "", url);
       route();

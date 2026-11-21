@@ -2,7 +2,7 @@
 
 This repository accompanies **Toric Calabi–Yau orientifolds: constructions, fixed loci and O-plane charges** by Xu Cao and Xin Gao. [arXiv:2611.22785](https://arxiv.org/abs/2611.22785)
 
-**[Search the catalogue](https://groupofxg.github.io/toric-cy-orientifold-catalogue/)** · **[Download the data](https://github.com/GroupofXG/toric-cy-orientifold-catalogue/releases/tag/h1-h6-20261120)** · [Reader’s guide](https://groupofxg.github.io/toric-cy-orientifold-catalogue/guide.html)
+**[Search by scientific properties](https://groupofxg.github.io/toric-cy-orientifold-catalogue/?search=1)** · [Look up a catalogue ID](https://groupofxg.github.io/toric-cy-orientifold-catalogue/#lookup) · [Download the data](https://github.com/GroupofXG/toric-cy-orientifold-catalogue/releases/tag/h1-h6-20261120) · [Reader’s guide](https://groupofxg.github.io/toric-cy-orientifold-catalogue/guide.html)
 
 ## Coverage
 
@@ -21,6 +21,12 @@ Edition `h1-h6-20261120` covers favourable polytopes at $h^{1,1}=1$ through $6$ 
 An involution is counted once on its polytope and can occur on several FRSTs. The smoothness field refers to a general member of the specified eigenfamily. In this edition 3,602 nonempty families have an unresolved smoothness verdict, recorded as `null`.
 
 ## Find a record
+
+You can start with a physics question even if you do not know a catalogue ID. Select a Hodge number and the O-planes that must occur together, then narrow the results by involution type, parity or generic smoothness. Each match is one polynomial eigenfamily on one triangulation for one involution. Open its ID to inspect the fixed components and their equations, or share the query URL with a colleague.
+
+* [Families with both O3 and O7 at $h^{1,1}=2$](https://groupofxg.github.io/toric-cy-orientifold-catalogue/?search=1&rank=2&planes=O3,O7) (152 eigenfamilies).
+* [Smooth reflection families with O7 and whole fixed-set Euler characteristic 48 at $h^{1,1}=3$](https://groupofxg.github.io/toric-cy-orientifold-catalogue/?search=1&rank=3&kind=REF&planes=O7&smooth=smooth&euler=48) (231 eigenfamilies).
+* [Local-D7 configurations with $L_{\mathrm{D3}}=12$ at $h^{1,1}=3$](https://groupofxg.github.io/toric-cy-orientifold-catalogue/?search=1&rank=3&d3=12) (257 eigenfamilies). This search uses equation (31) of the paper for smooth, Ω-odd families with a nonempty fixed set classified entirely as O3 or O7.
 
 Paste a catalogue ID into the search page, or follow a record link directly. For example, `P2_1_T0_I1_Pplus` is the positive polynomial parity of divisor exchange 1 on triangulation 0 of polytope 1 at $h^{1,1}=2$. Its fixed locus is an O5 curve of Euler characteristic $-18$. The page also lets you switch to the other parity or export the selected triangulation and its associated records as JSON. [Open this example](https://groupofxg.github.io/toric-cy-orientifold-catalogue/?h=2&p=1&t=P2_1_T0&i=P2_1_I1&s=Pplus)
 
