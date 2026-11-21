@@ -1,0 +1,31 @@
+#result { overflow-wrap: anywhere; }
+#result h3[id] { border-top: 1px solid var(--line); padding-top: 1.1rem; margin-top: 2rem; scroll-margin-top: .75rem; }
+#result .record-panel h4, #result .sector h4:not(:first-child), .record-hodge h4, .record-equations h4 {
+  font: 600 1.04rem/1.35 "Source Sans 3","Segoe UI",sans-serif; margin: 1.1rem 0 .4rem;
+}
+.record-nav { display: flex; flex-wrap: wrap; gap: .2rem 1.05rem; font-size: .9rem; }
+.record-nav a { padding: .2rem 0; }
+.record-fields { display: flex; flex-wrap: wrap; gap: .5rem 2rem; margin: .8rem 0 1rem; }
+.record-fields > div { display: flex; flex-direction: column; font-variant-numeric: tabular-nums; }
+.field-name { color: var(--muted); font-size: .83rem; }
+.record-note { color: var(--muted); font-size: .91rem; margin: .5rem 0 .85rem; }
+.record-scroll { max-width: 100%; overflow-x: auto; }
+.record-scroll table { font-size: .95rem; }
+#result td { vertical-align: top; }
+.intersection-pair { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1rem 2.5rem; }
+.intersection-block td:last-child, #result .intersection-block th:last-child { text-align: right; }
+.intersection-block td:first-child, .math-list span, .record-equations td:nth-child(2) {
+  font: 1.05rem/1.45 "STIX Two Text","Cambria Math",Georgia,serif;
+}
+.intersection-block tr, .record-hodge tr { font-variant-numeric: tabular-nums; }
+.math-list { display: flex; gap: .25rem 1.35rem; flex-wrap: wrap; margin: .5rem 0; }
+.record-hodge { max-width: 33rem; }
+.record-equations table, .sector .scroll table { white-space: normal; }
+.record-equations td:first-child { width: 20%; }
+.sector[data-selected] { scroll-margin-top: .75rem; }
+.sector { margin: .8rem 0 1.5rem; }
+#result .sector > h4:first-child { font: 500 1.45rem/1.2 "STIX Two Text",Georgia,serif; }
+@media (max-width: 42rem) {
+  .intersection-pair { grid-template-columns: minmax(0,1fr); gap: 0; }
+  .sector { padding-left: .6rem; padding-right: .6rem; }
+}

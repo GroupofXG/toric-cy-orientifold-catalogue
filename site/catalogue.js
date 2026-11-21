@@ -139,22 +139,32 @@
     }
     frame.append(table); return frame;
   }
-  function family(row,coefficients) {
+  const reader = window.catalogueRecords;
+  function sectionTitle(id,text) {
+    const title=el("h3",text);
+    title.id="record-"+id;
+    return title;
+  }
+  function family(row,coefficients,poly) {
     const box=el("div",null,"sector");
     const title=el("h4","Polynomial parity "+sign(row.polynomial_parity));
-    box.append(title,el("div",sectorId(row),"meta"));
-    box.append(el("p","Ω parity "+sign(row.omega_parity)+" · Smoothness: "+(row.smoothness ?? "unavailable")+" · Fixed-set Euler: "+(row.euler_fixed ?? "unavailable")));
-    box.append(fixedRows(row.fixed_loci),disclosure("Full eigenfamily record",row));
-    if (coefficients != null) box.append(disclosure("Coefficient definitions",coefficients));
+    box.append(title,el("div",sectorId(row),"meta"),reader.nav());
+    const facts=reader.list();
+    reader.label(facts,"Ω parity",sign(row.omega_parity));
+    reader.label(facts,"Generic smoothness",row.smoothness ?? "No verdict");
+    reader.label(facts,"Fixed-set Euler χ",row.euler_fixed);
+    box.append(facts,reader.hodge(row,poly),el("h4","Fixed loci on X"),fixedRows(row.fixed_loci),reader.polynomials(row.polynomials));
+    if (coefficients != null) box.append(reader.coefficients(coefficients),disclosure("Coefficient definitions",coefficients));
+    box.append(disclosure("Full eigenfamily record",row));
     return box;
   }
-  function selectAction(h,p,tri,entry,requested,parity,area) {
+  function selectAction(h,p,tri,entry,requested,parity,area,poly) {
     const invols=entry.involutions, families=entry.sectors ?? entry.orientifolds;
     if (!Array.isArray(invols) || !Array.isArray(families)) throw Error("The FRST record lacks its action or family table.");
     const label=entry.triangulation.triangulation_id;
-    area.append(disclosure("Triangulation data · "+label,entry.triangulation));
+    area.append(reader.triangulation(entry.triangulation),disclosure("Triangulation data · "+label,entry.triangulation));
     area.append(objectLink("Download FRST and linked records (JSON)",{triangulation:entry.triangulation,involutions:invols,orientifolds:families,coefficients:entry.coefficients ?? {}},label+".json"));
-    area.append(el("h3","Involution and eigenfamilies"));
+    area.append(sectionTitle("involution","Involution"));
     if (!invols.length) { area.append(el("p","No involutions recorded on this triangulation.")); return; }
     const control=el("select"); control.id="action"; 
     for (const row of invols) control.add(opt(labelId(row),labelId(row)+" · "+(row.type ?? "involution")));
@@ -164,12 +174,12 @@
     control.addEventListener("change",()=>navigate(h,p,tri,control.value));
     area.append(fields("Involution",control));
     if (!active) throw Error(id+" is absent from this triangulation.");
-    area.append(disclosure("Involution data",active));
+    area.append(reader.involution(active),disclosure("Involution data",active),sectionTitle("eigenfamilies","Eigenfamilies"));
     const records=families.filter(r=>labelId(r)===id).sort((a,b)=>b.polynomial_parity-a.polynomial_parity);
     if (!records.length) area.append(el("p","No eigenfamilies recorded for this involution on this triangulation."));
     let selected;
     for (const row of records) {
-      const box=family(row,entry.coefficients?.[sectorId(row)]);
+      const box=family(row,entry.coefficients?.[sectorId(row)],poly);
       const suffix=sectorId(row).split("_").pop();
       const permalink=el("a","Link to eigenfamily");
       permalink.href=viewURL(h,p,tri,id,suffix);
@@ -179,17 +189,19 @@
     }
     if (parity) {
       if (!selected) throw Error(parity+" is absent for this triangulation and involution.");
-      selected.dataset.selected=""; selected.tabIndex=-1; selected.focus({preventScroll:true}); selected.scrollIntoView({block:"center"});
+      selected.dataset.selected=""; selected.tabIndex=-1; selected.focus({preventScroll:true}); selected.scrollIntoView({block:"start"});
     }
   }
   async function showPoly(h,p,loaded,params,seq) {
     const {record,zip,base}=loaded, full=record.polytope.polytope_id;
     const result=$("result");
-    result.append(el("h2",full),disclosure("Polytope data",record.polytope));
+    result.append(el("h2",full),sectionTitle("polytope","Polytope"),reader.polytope(record.polytope),disclosure("Polytope data",record.polytope));
     if (zip) result.append(download("Download source batch (ZIP)",zip.href,zip.pathname.split("/").pop()));
     const all=record.triangulations;
     if (!all.length) { result.append(el("p","No triangulations recorded for this polytope.")); return; }
-    result.append(el("h3","Triangulation"));
+    const toc=reader.nav();
+    result.firstElementChild.after(toc);
+    result.append(sectionTitle("triangulation","Triangulation"));
     const control=el("select"); control.id="tri";
     for (const tri of all) control.add(opt(tri.id,tri.id));
     const action=params.get("i");
@@ -207,7 +219,7 @@
       entry=view.record;
     }
     if (seq!==routeNumber) return;
-    selectAction(h,p,String(picked.id),entry,action,params.get("s"),result);
+    selectAction(h,p,String(picked.id),entry,action,params.get("s"),result,record.polytope);
   }
   async function route() {
     const seq=++routeNumber, params=new URLSearchParams(location.search);
