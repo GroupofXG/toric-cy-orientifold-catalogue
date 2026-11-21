@@ -28,6 +28,9 @@
 .result-tools .page-position{color:var(--muted);font-variant-numeric:tabular-nums}
 .result-tools .export{margin-left:auto}
 .search-info a{white-space:nowrap}
+.match-export{margin-top:1rem;border-top:1px solid var(--line);padding-top:.8rem}
+.match-export .field-help[role=status]{display:inline-block;margin-left:.6rem}
+.match-export pre{white-space:pre-wrap;overflow-wrap:anywhere}
 @media(max-width:43rem){
   .search-fields{grid-template-columns:repeat(2,minmax(0,1fr))}
   .properties-table th,.properties-table td{font-size:.9rem}

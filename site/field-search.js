@@ -7,6 +7,7 @@
   const advanced = document.getElementById("advanced-search");
   const rankCache = new Map(), blockCache = new Map();
   const pageSize = 25;
+  const maxBrowserExport = 50000;
   const planeBits = {O3: 1, O5: 2, O7: 4, O9: 8};
   const label = new Intl.NumberFormat("en-US");
   const base = new URL("./search/", document.baseURI);
@@ -18,7 +19,7 @@
   const numeric = ["h21", "h11minus", "h21minus"];
   const rangeFields = ["euler", "o3", "d3"];
   const named = [...Object.keys(categorical), ...numeric, ...rangeFields];
-  let request = 0, exportUrl;
+  let request = 0, exportUrl, idExportUrl;
 
   function node(tag, text, className) {
     const el = document.createElement(tag);
@@ -167,7 +168,7 @@
     return {matches, count};
   }
 
-  function identify(data, row, view, offset) {
+  function identify(data, row, view, offset, withLink = true) {
     const c = data.col;
     const packed = view.getFloat64(8 * (offset % data.chunk_size), true);
     if (!Number.isSafeInteger(packed) || packed < 0) throw Error("Invalid family identifier in the search index.");
@@ -179,9 +180,12 @@
     const tri = (triCode % 2 ? "TX" : "T") + Math.floor(triCode / 2);
     const action = (row[c.kind] === "REF" ? "R" : "I") + packed % data.action_stride;
     const parity = row[c.poly_parity] === 1 ? "Pplus" : "Pminus";
+    const family = {id:[prefix,tri,action,parity].join("_")};
+    if (!withLink) return family;
     const url = new URL("./", document.baseURI);
     url.search = new URLSearchParams({h:data.rank, p:poly, t:prefix+"_"+tri, i:prefix+"_"+action, s:parity});
-    return {id:[prefix,tri,action,parity].join("_"), url:url.href};
+    family.url = url.href;
+    return family;
   }
 
   async function rowsForPage(matches, begin, end) {
@@ -276,11 +280,67 @@
     return nav;
   }
 
+  function fullExport(matches, count, ranks) {
+    const box = node("div",undefined,"match-export");
+    const help = node("a","Export full records as JSON Lines"); help.href = "./guide.html#export";
+    const current = pageURL(1), details = node("details");
+    details.append(node("summary","Export full records (JSONL)"));
+    const archives = ranks.map(rank => "h11-" + rank + "-four-tables.zip").join(" ");
+    const command = "python select_families.py " + archives + " --query-url '" + current.href + "' > matches.jsonl";
+    details.append(node("p","Run this command with the rank downloads used by the search.","field-help"),node("pre",command),help);
+    if (count > maxBrowserExport) {
+      box.append(node("p","This query exceeds the browser export limit of " + label.format(maxBrowserExport) +
+        " IDs. The command below exports all " + label.format(count) + " matching records.", "field-help"),details);
+      return box;
+    }
+    const title = "Download all " + label.format(count) + " matching IDs (TXT)";
+    const button = node("button",title,"secondary"), progress = node("span",undefined,"field-help");
+    progress.setAttribute("role","status");
+    button.addEventListener("click",async () => {
+      const seq = request, ids = [];
+      let lastUpdate = -1;
+      button.disabled = true;
+      try {
+        for (const {row,data} of matches) {
+          const c = data.col, end = row[c.start] + row[c.count];
+          for (let offset = row[c.start]; offset < end;) {
+            const blockNo = Math.floor(offset / data.chunk_size);
+            const block = await getBlock(data.rank,blockNo);
+            if (seq !== request) return;
+            const stop = Math.min(end,(blockNo + 1) * data.chunk_size);
+            for (; offset < stop; offset++) ids.push(identify(data,row,block,offset,false).id);
+            const step = Math.floor(100 * ids.length / count);
+            if (step !== lastUpdate) {
+              progress.textContent = "Preparing IDs… " + step + "%";
+              lastUpdate = step;
+            }
+          }
+        }
+        if (ids.length !== count) throw Error("The export count differs from the search total. Retry the download.");
+        idExportUrl = URL.createObjectURL(new Blob([ids.join("\n") + "\n"],{type:"text/plain;charset=utf-8"}));
+        const link = node("a",title);
+        link.href = idExportUrl; link.download = "orientifold-ids-" + count + ".txt";
+        button.replaceWith(link);
+        progress.textContent = label.format(count) + " IDs, one per line.";
+        link.click();
+      } catch (e) {
+        if (seq === request) { button.disabled = false; progress.textContent = e.message; }
+      }
+    });
+    box.append(button, progress, details);
+    return box;
+  }
+
+  function revokeExports() {
+    if (exportUrl) URL.revokeObjectURL(exportUrl);
+    if (idExportUrl) URL.revokeObjectURL(idExportUrl);
+    exportUrl = null; idExportUrl = null;
+  }
+
   async function run(scroll = false) {
     const seq = ++request, params = new URLSearchParams(location.search);
     output.replaceChildren();
-    if (exportUrl) URL.revokeObjectURL(exportUrl);
-    exportUrl = null; tell("");
+    revokeExports(); tell("");
     if (!params.has("search")) { fillForm({planes:[]}); return; }
     try {
       const {filters, page} = readQuery(params);
@@ -303,7 +363,7 @@
       if (seq !== request) return;
       const info = node("p", "Showing " + label.format(begin+1) + "–" + label.format(end) + ". ", "search-info");
       const link = node("a", "Link to this search"); link.href = pageURL(selected); info.append(link);
-      output.append(info, makeTable(rows), pageTools(selected,pages));
+      output.append(info, makeTable(rows), pageTools(selected,pages), fullExport(matches,count,numbers));
       tell("");
     } catch (e) { if (seq === request) tell(e.message, true); }
   }
@@ -319,8 +379,7 @@
   form.addEventListener("reset", () => {
     if (new URLSearchParams(location.search).has("search")) history.pushState(null,"",new URL("./",document.baseURI));
     request++; output.replaceChildren(); tell(""); advanced.open = false;
-    if (exportUrl) URL.revokeObjectURL(exportUrl);
-    exportUrl = null;
+    revokeExports();
   });
   window.addEventListener("popstate", () => run());
   run();

@@ -49,6 +49,12 @@ python select_families.py h11-3-four-tables.zip --kind REF --smoothness smooth -
 
 The result is 231. Omit `--count` to write the matching JSON Lines records to standard output.
 
+To export the full records behind a web search, copy its URL and pass it to the same script along with the corresponding rank ZIP. This example writes all 152 eigenfamilies that contain both O3 and O7 at rank two to a JSON Lines file.
+
+```sh
+python select_families.py h11-2-four-tables.zip --query-url 'https://groupofxg.github.io/toric-cy-orientifold-catalogue/?search=1&rank=2&planes=O3,O7' > h2-o3-o7.jsonl
+```
+
 ## Original catalogue
 
 The original divisor-exchange and coordinate-reflection data are available separately. For studies that use those files, cite the catalogue paper by Xu Cao, Hongfei Gao and Xin Gao. [Original repository](https://github.com/GroupofXG/anewcydatabase) · [Original data release](https://github.com/GroupofXG/anewcydatabase/releases/tag/data-v1) · [JHEP 10 (2024) 188](https://doi.org/10.1007/JHEP10(2024)188)

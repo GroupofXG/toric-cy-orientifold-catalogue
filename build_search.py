@@ -11,11 +11,10 @@ import sys
 import tempfile
 from zipfile import ZipFile
 
+from select_families import ACTION_KINDS, fixed_fields
 
 FIELDS = ["h21", "finite", "kind", "poly_parity", "omega", "smooth", "planes",
           "fixed_state", "euler", "o3", "h11_minus", "h21_minus", "count", "start"]
-PLANE_BITS = {"O3": 1, "O5": 2, "O7": 4, "O9": 8, None: 16}
-ACTION_KINDS = {"reflection": ("R", "REF"), "divisor_exchange": ("I", "NID")}
 PAGE_ROWS = 32768
 PART_BATCHES = 64
 
@@ -49,23 +48,6 @@ def measure(part):
                 max_action = max(max_action, int(suffix[1:]))
                 action_count += 1
     return max_tri, max_action, tri_count, action_count
-
-
-def fixed_fields(loci):
-    if loci is None:
-        return 0, "unavailable", None
-    if not loci:
-        return 0, "empty", 0
-    mask, points = 0, 0
-    for locus in loci:
-        plane = locus["type"]
-        mask |= PLANE_BITS[plane]
-        if plane is None:
-            points = None
-        elif plane == "O3" and points is not None:
-            n = locus.get("point_count")
-            points = None if n is None else points + n
-    return mask, "listed", points
 
 
 def index_part(job):
