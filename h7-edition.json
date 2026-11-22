@@ -1,0 +1,20 @@
+{
+  "tag": "h7-20261122",
+  "assets": [
+    {
+      "file": "h7-pages-index.zip",
+      "sha256": "952a6c8429859d78b7de757e95b55ada62adc2a1dc9afeef6594d1fe79d3faae",
+      "bytes": 70163181
+    }
+  ],
+  "rank": {
+    "value": 7,
+    "batch_index": "index/h7.json",
+    "format": "packed7-v1",
+    "bulk_url": "https://github.com/GroupofXG/toric-cy-orientifold-catalogue/releases/tag/h7-20261122",
+    "polytopes": 48221,
+    "triangulations": 5990333,
+    "involutions": 730422,
+    "sectors": 179981786
+  }
+}

@@ -2,9 +2,13 @@
 import argparse
 from contextlib import ExitStack
 from fractions import Fraction
+from glob import glob
 import json
+from pathlib import Path
 import re
+import shutil
 import sys
+from tempfile import SpooledTemporaryFile
 from urllib.parse import parse_qs, urlsplit
 from zipfile import BadZipFile, ZipFile
 
@@ -12,7 +16,7 @@ from zipfile import BadZipFile, ZipFile
 PLANE_BITS = {"O3": 1, "O5": 2, "O7": 4, "O9": 8, None: 16}
 ACTION_KINDS = {"reflection": ("R", "REF"), "divisor_exchange": ("I", "NID")}
 MAX_SAFE_INTEGER = 2**53 - 1
-CATEGORIES = {"rank": tuple("123456"), "kind": ("NID", "REF"),
+CATEGORIES = {"rank": tuple("1234567"), "kind": ("NID", "REF"),
               "smooth": ("smooth", "singular", "null"), "parity": ("1", "-1"),
               "omega": ("1", "-1"), "finite": ("0", "1"),
               "fixed": ("listed", "empty", "unavailable")}
@@ -153,9 +157,22 @@ def matches(row, filters, actions):
     return True
 
 
+def scan(archive, prefix, filters, count_only):
+    actions = eligible_actions(archive, prefix, filters)
+    count = 0
+    with archive.open(prefix + "/orientifolds.jsonl") as data:
+        for line in data:
+            if filters and not matches(json.loads(line), filters, actions):
+                continue
+            count += 1
+            if not count_only:
+                sys.stdout.buffer.write(line)
+    return count
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("archive", nargs="+", help="One or more h11-N-four-tables.zip files, one per rank")
+    parser.add_argument("archive", nargs="+", help="Rank ZIP files or rank-seven archive parts; wildcards are accepted")
     parser.add_argument("--query-url", help="Apply all property filters from a search link, across every results page")
     parser.add_argument("--id", help="exact orientifold_id")
     parser.add_argument("--kind", choices=("NID", "REF"))
@@ -184,31 +201,56 @@ def main():
     rank_filter = filters.pop("rank", None)
     count = 0
     with ExitStack() as stack:
-        archives = {}
-        for path in args.archive:
+        archives = []
+        whole_ranks = set()
+        seen_batches = set()
+        paths = []
+        for pattern in args.archive:
+            expanded = [pattern] if Path(pattern).is_file() else sorted(glob(pattern))
+            if not expanded:
+                parser.error(f"No input archive matches {pattern}")
+            paths.extend(expanded)
+        for path in paths:
             try:
                 archive = stack.enter_context(ZipFile(path))
             except (BadZipFile, OSError) as exc:
                 parser.error(f"{path}: {exc}")
-            members = [n for n in archive.namelist() if re.fullmatch(r"h11=[0-9]+/orientifolds\.jsonl", n)]
-            if len(members) != 1:
-                parser.error(f"{path}: expected exactly one rank-level orientifolds.jsonl")
-            prefix, _ = members[0].split("/")
-            rank = int(prefix.split("=")[1])
+            names = archive.namelist()
+            batches = [n for n in names if re.fullmatch(r"batches/h7_b[0-9]{5}\.zip",n)]
+            members = [n for n in names if re.fullmatch(r"h11=[0-9]+/orientifolds\.jsonl", n)]
+            if batches:
+                batch_names = set(batches)
+                if members or 7 in whole_ranks:
+                    parser.error(f"{path}: overlapping rank-seven inputs")
+                if len(batches) != len(batch_names) or seen_batches.intersection(batch_names):
+                    parser.error(f"{path}: duplicate rank-seven batch")
+                if any(n.startswith("batches/") and not n.endswith("/") and n not in batch_names for n in names):
+                    parser.error(f"{path}: unexpected member in batches/")
+                seen_batches.update(batches)
+                prefix,rank = "h11=7",7
+            elif len(members) == 1:
+                prefix, _ = members[0].split("/")
+                rank = int(prefix.split("=")[1])
+                if rank in whole_ranks or rank == 7 and seen_batches:
+                    parser.error(f"Overlapping inputs for h11={rank}")
+                whole_ranks.add(rank)
+            else:
+                parser.error(f"{path}: expected one rank-level orientifolds.jsonl or rank-seven batches")
             if rank_filter is not None and rank_filter != rank:
                 parser.error(f"The search selects h11={rank_filter}, but {path} contains h11={rank}")
-            if rank in archives:
-                parser.error(f"Two input archives contain h11={rank}")
-            archives[rank] = archive, prefix
-        for archive, prefix in archives.values():
-            actions = eligible_actions(archive, prefix, filters)
-            with archive.open(prefix + "/orientifolds.jsonl") as data:
-                for line in data:
-                    if filters and not matches(json.loads(line), filters, actions):
-                        continue
-                    count += 1
-                    if not args.count:
-                        sys.stdout.buffer.write(line)
+            archives.append((archive, prefix, batches))
+        for archive, prefix, batches in archives:
+            if not batches:
+                count += scan(archive, prefix, filters, args.count)
+                continue
+            for batch in batches:
+                with archive.open(batch) as src, SpooledTemporaryFile(max_size=8*1024*1024) as temp:
+                    shutil.copyfileobj(src, temp, 1024*1024)
+                    temp.seek(0)
+                    with ZipFile(temp) as inner:
+                        if inner.namelist().count(prefix+"/orientifolds.jsonl") != 1:
+                            parser.error(f"{batch}: missing or duplicated family table")
+                        count += scan(inner, prefix, filters, args.count)
     if args.count:
         print(count)
 

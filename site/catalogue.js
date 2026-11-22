@@ -117,9 +117,14 @@
     const full = "P"+rank.value+"_"+p;
     if (index) {
       const slug=index.polytopes[p], batch=index.batches[slug];
-      if (!slug) throw Error(full+" is absent from this edition.");
+      if (slug == null) throw Error(full+" is absent from this edition.");
       if (!batch) throw Error("The catalogue index is missing the batch entry for "+full+".");
       const url=new URL(batch.file,dataRoot);
+      if (rank.format === "packed7-v1") {
+        const record=await window.readRankSevenBatch(url.href,batch.sha256,rank.value,full);
+        const volume = batch.download_url || (batch.bulk_file && rank.bulk_url.replace("/tag/","/download/") + "/" + batch.bulk_file);
+        return {key,record,browserFile:url,bulk:rank.bulk_url,volume,batchName:slug};
+      }
       const record=await window.readCatalogueBatch(url.href,batch.sha256,rank.value,full);
       return {key,record,zip:url};
     }
@@ -193,10 +198,17 @@
     }
   }
   async function showPoly(h,p,loaded,params,seq) {
-    const {record,zip,base}=loaded, full=record.polytope.polytope_id;
+    const {record,zip,base,browserFile,bulk,volume,batchName}=loaded, full=record.polytope.polytope_id;
     const result=$("result");
     result.append(el("h2",full),sectionTitle("polytope","Polytope"),reader.polytope(record.polytope),disclosure("Polytope data",record.polytope));
     if (zip) result.append(download("Download source batch (ZIP)",zip.href,zip.pathname.split("/").pop()));
+    if (browserFile) {
+      result.append(download("Download this browser data file (.gz)",browserFile.href,browserFile.pathname.split("/").pop()));
+      if (volume) {
+        const a=el("a","Original four tables · " + volume.split("/").pop()); a.href=volume;
+        result.append(" · ", a, el("p","Source inside this archive: batches/" + batchName + ".zip","meta"));
+      } else if (bulk) { const a=el("a","Original four-table archives"); a.href=bulk; result.append(" · ",a); }
+    }
     const all=record.triangulations;
     if (!all.length) { result.append(el("p","No triangulations recorded for this polytope.")); return; }
     const toc=reader.nav();
@@ -258,9 +270,14 @@
       const a=el("a",r.value); a.href=viewURL(r.value); th.append(a); tr.append(th);
       for (const val of [r.polytopes,r.triangulations,r.involutions,r.sectors]) tr.append(el("td",number(val)));
       if (manifest.download_base) {
-        const file=r.bulk_file ?? "h11-"+r.value+"-four-tables.zip";
-        const base=new URL(manifest.download_base.replace(/\/?$/,"/"),document.baseURI);
-        tr.insertCell().append(download("Four tables (ZIP)",new URL(file,base).href,file));
+        const cell=tr.insertCell();
+        if (r.bulk_url) {
+          const a=el("a","Four-table archive parts"); a.href=r.bulk_url; cell.append(a);
+        } else {
+          const file=r.bulk_file ?? "h11-"+r.value+"-four-tables.zip";
+          const base=new URL(manifest.download_base.replace(/\/?$/,"/"),document.baseURI);
+          cell.append(download("Four tables (ZIP)",new URL(file,base).href,file));
+        }
       }
     }
     const foot=$("counts").closest("table").createTFoot().insertRow(), total=el("th","Total"); total.scope="row"; foot.append(total);

@@ -12,7 +12,7 @@
   const label = new Intl.NumberFormat("en-US");
   const base = new URL("./search/", document.baseURI);
   const categorical = {
-    rank: ["1", "2", "3", "4", "5", "6"], kind: ["NID", "REF"],
+    rank: ["1", "2", "3", "4", "5", "6", "7"], kind: ["NID", "REF"],
     smooth: ["smooth", "singular", "null"], parity: ["1", "-1"], omega: ["1", "-1"],
     fixed: ["listed", "empty", "unavailable"], finite: ["0", "1"]
   };
@@ -130,9 +130,33 @@
     });
   }
 
-  function getBlock(rank, number) {
-    const key = "h" + rank + "/p" + number + ".bin.gz";
-    const block = cached(blockCache, key, async () => new DataView(await readGzip(key)));
+  function deltaBlock(buffer, limit) {
+    const bytes = new Uint8Array(buffer), values = new Float64Array(limit);
+    let n = 0, previous = 0n, delta = 0n, shift = 0n;
+    for (const byte of bytes) {
+      delta |= BigInt(byte & 127) << shift;
+      if (byte & 128) {
+        shift += 7n;
+        if (shift >= 56n) throw Error("Invalid variable-length family identifier.");
+        continue;
+      }
+      previous += (delta >> 1n) ^ -(delta & 1n);
+      if (n === limit || previous < 0n || previous > BigInt(Number.MAX_SAFE_INTEGER)) throw Error("Invalid family identifier.");
+      values[n++] = Number(previous);
+      shift = 0n; delta = 0n;
+    }
+    if (shift !== 0n || !n) throw Error("Incomplete family ID block.");
+    return values.subarray(0,n);
+  }
+
+  function getBlock(data, number) {
+    const key = "h" + data.rank + "/p" + number + ".bin.gz";
+    const block = cached(blockCache, key, async () => {
+      const bytes = await readGzip(key);
+      if (data.encoding === "delta-varint-v1") return deltaBlock(bytes,data.chunk_size);
+      if (data.encoding != null) throw Error("Unsupported search index encoding.");
+      return new DataView(bytes);
+    });
     // Retain only a few recently used ID blocks across page changes.
     while (blockCache.size > 32) blockCache.delete(blockCache.keys().next().value);
     return block;
@@ -170,7 +194,8 @@
 
   function identify(data, row, view, offset, withLink = true) {
     const c = data.col;
-    const packed = view.getFloat64(8 * (offset % data.chunk_size), true);
+    const pos = offset % data.chunk_size;
+    const packed = view instanceof DataView ? view.getFloat64(8 * pos, true) : view[pos];
     if (!Number.isSafeInteger(packed) || packed < 0) throw Error("Invalid family identifier in the search index.");
     const quotient = Math.floor(packed / data.action_stride);
     const triCode = quotient % data.tri_stride;
@@ -201,7 +226,7 @@
     const rows = [];
     for (let i = 0; i < tasks.length; i += 5) {
       const part = await Promise.all(tasks.slice(i, i + 5).map(async ({data,row,offset}) => {
-        const block = await getBlock(data.rank, Math.floor(offset / data.chunk_size));
+        const block = await getBlock(data, Math.floor(offset / data.chunk_size));
         return {data,row,...identify(data,row,block,offset)};
       }));
       rows.push(...part);
@@ -285,9 +310,10 @@
     const help = node("a","Export full records as JSON Lines"); help.href = "./guide.html#export";
     const current = pageURL(1), details = node("details");
     details.append(node("summary","Export full records (JSONL)"));
-    const archives = ranks.map(rank => "h11-" + rank + "-four-tables.zip").join(" ");
+    const archives = ranks.map(rank => rank === 7 ? "h11-7-four-tables-part*.zip" : "h11-" + rank + "-four-tables.zip").join(" ");
     const command = "python select_families.py " + archives + " --query-url '" + current.href + "' > matches.jsonl";
-    details.append(node("p","Run this command with the rank downloads used by the search.","field-help"),node("pre",command),help);
+    const advice = ranks.includes(7) ? "Save every rank-seven archive part for a complete rank-seven export. The command scans the files you supply." : "Run this command with the rank downloads used by the search.";
+    details.append(node("p",advice,"field-help"),node("pre",command),help);
     if (count > maxBrowserExport) {
       box.append(node("p","This query exceeds the browser export limit of " + label.format(maxBrowserExport) +
         " IDs. The command below exports all " + label.format(count) + " matching records.", "field-help"),details);
@@ -305,7 +331,7 @@
           const c = data.col, end = row[c.start] + row[c.count];
           for (let offset = row[c.start]; offset < end;) {
             const blockNo = Math.floor(offset / data.chunk_size);
-            const block = await getBlock(data.rank,blockNo);
+            const block = await getBlock(data,blockNo);
             if (seq !== request) return;
             const stop = Math.min(end,(blockNo + 1) * data.chunk_size);
             for (; offset < stop; offset++) ids.push(identify(data,row,block,offset,false).id);
@@ -345,8 +371,8 @@
     try {
       const {filters, page} = readQuery(params);
       fillForm(filters);
-      const numbers = filters.rank ? [Number(filters.rank)] : [1,2,3,4,5,6];
-      tell("Loading property index for " + (filters.rank ? "h¹,¹ = " + filters.rank : "all six ranks") + "…");
+      const numbers = filters.rank ? [Number(filters.rank)] : categorical.rank.map(Number);
+      tell("Loading property index for " + (filters.rank ? "h¹,¹ = " + filters.rank : "all seven ranks") + "…");
       const ranks = await Promise.all(numbers.map(getRank));
       if (seq !== request) return;
       const {matches, count} = selectGroups(ranks, filters);

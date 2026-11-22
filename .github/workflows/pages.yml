@@ -20,6 +20,14 @@ jobs:
           python prepare_pages.py "$RUNNER_TEMP/catalogue-pages-data.zip" site
       - name: Build the property search index from the released tables
         run: python build_search.py site/data site/search --workers 2
+      - name: Verify and install the rank-seven reader and property search
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=$(python -c 'import json; print(json.load(open("h7-edition.json"))["tag"])')
+          mkdir -p "$RUNNER_TEMP/h7-pages"
+          gh release download "$tag" --pattern 'h7-pages-*.zip' --dir "$RUNNER_TEMP/h7-pages"
+          python prepare_h7_pages.py "$RUNNER_TEMP/h7-pages" site
       - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:

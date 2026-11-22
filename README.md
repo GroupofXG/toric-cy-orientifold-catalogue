@@ -2,11 +2,11 @@
 
 This repository accompanies **Toric Calabi–Yau orientifolds: constructions, fixed loci and O-plane charges** by Xu Cao and Xin Gao. [arXiv:2611.22785](https://arxiv.org/abs/2611.22785)
 
-**[Search by scientific properties](https://groupofxg.github.io/toric-cy-orientifold-catalogue/?search=1)** · [Look up a catalogue ID](https://groupofxg.github.io/toric-cy-orientifold-catalogue/#lookup) · [Download the data](https://github.com/GroupofXG/toric-cy-orientifold-catalogue/releases/tag/h1-h6-20261120) · [Reader’s guide](https://groupofxg.github.io/toric-cy-orientifold-catalogue/guide.html)
+**[Search by scientific properties](https://groupofxg.github.io/toric-cy-orientifold-catalogue/?search=1)** · [Look up a catalogue ID](https://groupofxg.github.io/toric-cy-orientifold-catalogue/#lookup) · [Data releases](https://github.com/GroupofXG/toric-cy-orientifold-catalogue/releases) · [Reader’s guide](https://groupofxg.github.io/toric-cy-orientifold-catalogue/guide.html)
 
 ## Coverage
 
-Edition `h1-h6-20261120` covers favourable polytopes at $h^{1,1}=1$ through $6$ and their fine, regular, star triangulations (FRSTs). For each FRST, the catalogue records the compatible divisor exchanges (NID) and the nontrivial reflection classes realised by Cox coordinate sign changes (REF). The two polynomial parities have separate records. Work on $h^{1,1}=7,8$ continues for later releases, with further computations planned at higher $h^{1,1}$.
+The catalogue covers favourable polytopes at $h^{1,1}=1$ through $7$ and their fine, regular, star triangulations (FRSTs). For each FRST it records the compatible divisor exchanges (NID) and the nontrivial reflection classes realised by Cox coordinate sign changes (REF). The two polynomial parities have separate records. Rank eight is in progress.
 
 | $h^{1,1}$ | Polytopes | FRSTs | Involutions | Eigenfamily records | Download |
 |---:|---:|---:|---:|---:|---|
@@ -16,9 +16,10 @@ Edition `h1-h6-20261120` covers favourable polytopes at $h^{1,1}=1$ through $6$ 
 | 4 | 1,185 | 5,330 | 18,115 | 161,068 | [ZIP · 7.6 MB](https://github.com/GroupofXG/toric-cy-orientifold-catalogue/releases/download/h1-h6-20261120/h11-4-four-tables.zip) |
 | 5 | 4,897 | 56,714 | 74,471 | 1,709,590 | [ZIP · 90 MB](https://github.com/GroupofXG/toric-cy-orientifold-catalogue/releases/download/h1-h6-20261120/h11-5-four-tables.zip) |
 | 6 | 16,608 | 584,281 | 252,068 | 17,576,040 | [ZIP · 1.05 GB](https://github.com/GroupofXG/toric-cy-orientifold-catalogue/releases/download/h1-h6-20261120/h11-6-four-tables.zip) |
-| **Total** | **22,974** | **646,903** | **348,983** | **19,464,170** | |
+| 7 | 48,221 | 5,990,333 | 730,422 | 179,981,786 | [68 ZIP volumes · 6.24 GB](https://github.com/GroupofXG/toric-cy-orientifold-catalogue/releases/tag/h7-20261122) |
+| **Total** | **71,195** | **6,637,236** | **1,079,405** | **199,445,956** | |
 
-An involution is counted once on its polytope and can occur on several FRSTs. The smoothness field refers to a general member of the specified eigenfamily. In this edition 3,602 nonempty families have an unresolved smoothness verdict, recorded as `null`.
+An involution is counted once on its polytope and can occur on several FRSTs. The smoothness field refers to a general member of the specified eigenfamily. Rank seven contributes 179,709,990 REF and 271,796 NID eigenfamily records. The smoothness field is `null` for 6 REF and 26,023 NID records at this rank.
 
 ## Find a record
 
@@ -30,7 +31,7 @@ You can start with a physics question even if you do not know a catalogue ID. Se
 
 Paste a catalogue ID into the search page, or follow a record link directly. For example, `P2_1_T0_I1_Pplus` is the positive polynomial parity of divisor exchange 1 on triangulation 0 of polytope 1 at $h^{1,1}=2$. Its fixed locus is an O5 curve of Euler characteristic $-18$. The page also lets you switch to the other parity or export the selected triangulation and its associated records as JSON. [Open this example](https://groupofxg.github.io/toric-cy-orientifold-catalogue/?h=2&p=1&t=P2_1_T0&i=P2_1_I1&s=Pplus)
 
-Each ZIP contains four UTF-8 JSON Lines tables. The IDs link each eigenfamily to its geometry and action.
+Ranks one through six have a single download per rank. Rank seven has 68 volumes, each containing the original public batch archives under `batches/`. The detail page for a rank-seven record links its volume and names the inner batch. Each batch contains the four UTF-8 JSON Lines tables and the coefficient definitions. The IDs link each eigenfamily to its geometry and action.
 
 | File | One row describes |
 |---|---|
@@ -49,6 +50,12 @@ python select_families.py h11-3-four-tables.zip --kind REF --smoothness smooth -
 
 The result is 231. Omit `--count` to write the matching JSON Lines records to standard output.
 
+At rank seven, pass one or more numbered volumes as separate arguments. The result covers the supplied volumes. To search the entire rank without downloading the volumes, use the [rank-seven property search](https://groupofxg.github.io/toric-cy-orientifold-catalogue/?search=1&rank=7).
+
+```sh
+python select_families.py h11-7-four-tables-part001.zip h11-7-four-tables-part002.zip --kind NID --count
+```
+
 To export the full records behind a web search, copy its URL and pass it to the same script along with the corresponding rank ZIP. This example writes all 152 eigenfamilies that contain both O3 and O7 at rank two to a JSON Lines file.
 
 ```sh
@@ -61,7 +68,7 @@ The original divisor-exchange and coordinate-reflection data are available separ
 
 ## Citation
 
-When citing a record from this edition, give its catalogue ID, the release tag `h1-h6-20261120` and the accompanying paper.
+When citing a record, give its catalogue ID, the release tag (`h1-h6-20261120` for ranks one through six or `h7-20261122` for rank seven), and the accompanying paper.
 
 ```bibtex
 @misc{Cao:2026oee,
